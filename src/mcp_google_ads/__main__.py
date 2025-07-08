@@ -5,10 +5,10 @@ from .logs import logger
 
 def main() -> None:
     try:
-        logger.info("🚀 Starting Google Ads MCP Server...")
+        logger.info("Starting Google Ads MCP Server...")
         mcp.run()
     except Exception as e:
-        logger.critical(f"❌ Application startup failed: {e}", exc_info=True)
+        logger.critical(f"Application startup failed: {e}", exc_info=True)
         sys.exit(1)
 
 if __name__ == "__main__":

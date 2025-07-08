@@ -13,4 +13,4 @@ class ConsolePrintHandler(logging.Handler):
 
 console_handler = ConsolePrintHandler()
 console_handler.setLevel(logging.INFO)
-# logger.addHandler(console_handler)
+logger.addHandler(console_handler)
