@@ -17,17 +17,10 @@ from mcp.server.fastmcp import FastMCP
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('google_ads_server')
 
-mcp = FastMCP(
-    "google-ads-server",
-    dependencies=[
-        "google-auth-oauthlib",
-        "google-auth",
-        "requests",
-        "python-dotenv"
-    ]
-)
+logger = logging.getLogger("mcp_google_ads")
+
+mcp = FastMCP("google-ads-server")
 
 # Constants and configuration
 SCOPES = ['https://www.googleapis.com/auth/adwords']
@@ -1424,6 +1417,9 @@ async def list_resources(customer_id: str) -> str:
     
     # Use your existing run_gaql function to execute this query
     return await run_gaql(customer_id, query)
+
+logger.debug("✅ Google Ads MCP Server started!")
+print("✅ Google Ads MCP Server started!")
 
 if __name__ == "__main__":
     # Start the MCP server on stdio transport

@@ -1,12 +1,13 @@
 [project]
 name = "mcp-google-ads"
-version = "0.1.0"
+version = "0.1.1"
 description = "Google Ads API integration for Model Context Protocol (MCP)"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Ernesto Cohnen", email = "ernesto@ixigo.com"}
+    {name = "Ernesto Cohnen", email = "ernesto@ixigo.com"},
+    {name = "Joel Casimir", email = "y9agf5y5@anonaddy.me"}
 ]
 keywords = ["mcp", "google ads", "seo", "sem", "claude","search analytics"]
 classifiers = [
@@ -33,5 +34,5 @@ dependencies = [
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["mcp_google_ads"]
+[project.scripts]
+mcp-google-ads = "mcp_google_ads.__main__:main"
