@@ -3,6 +3,8 @@ from .server import mcp
 import logging
 
 logger = logging.getLogger("mcp_google_ads")
+logging.basicConfig(level=logging.DEBUG)
+
 
 
 def main() -> None:
@@ -14,4 +16,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    main()

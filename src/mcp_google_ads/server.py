@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Optional, Union
 from pydantic import Field
 import os
 import json
 import requests
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
@@ -15,35 +15,35 @@ import logging
 # MCP
 from mcp.server.fastmcp import FastMCP
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Local
+from .logs import logger
+logging.basicConfig(level=logging.DEBUG)
 
-logger = logging.getLogger("mcp_google_ads")
-
-mcp = FastMCP("google-ads-server")
+mcp = FastMCP("google-ads-mcp")
 
 # Constants and configuration
 SCOPES = ['https://www.googleapis.com/auth/adwords']
 API_VERSION = "v19"  # Google Ads API version
 
 # Load environment variables
-try:
-    from dotenv import load_dotenv
-    # Load from .env file if it exists
-    load_dotenv()
-    logger.info("Environment variables loaded from .env file")
-except ImportError:
-    logger.warning("python-dotenv not installed, skipping .env file loading")
+if not load_dotenv():
+    logger.warning("⚠️ Unable to read .env file")
 
 # Get credentials from environment variables
-GOOGLE_ADS_CREDENTIALS_PATH = os.environ.get("GOOGLE_ADS_CREDENTIALS_PATH")
-GOOGLE_ADS_DEVELOPER_TOKEN = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN")
+GOOGLE_ADS_CREDENTIALS_PATH = os.environ.get("GOOGLE_ADS_CREDENTIALS_PATH", "")
+GOOGLE_ADS_DEVELOPER_TOKEN = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "")
 GOOGLE_ADS_LOGIN_CUSTOMER_ID = os.environ.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID", "")
 GOOGLE_ADS_AUTH_TYPE = os.environ.get("GOOGLE_ADS_AUTH_TYPE", "oauth")  # oauth or service_account
 
-def format_customer_id(customer_id: str) -> str:
+if not GOOGLE_ADS_DEVELOPER_TOKEN or not GOOGLE_ADS_AUTH_TYPE:
+    raise ValueError("⛔ One or more required environment variables are missing! Please check your .env variables.")
+
+def format_customer_id(customer_id: str | int | None) -> str:
     """Format customer ID to ensure it's 10 digits without dashes."""
     # Convert to string if passed as integer or another type
+    if not customer_id:
+        return GOOGLE_ADS_DEVELOPER_TOKEN
+    
     customer_id = str(customer_id)
     
     # Remove any quotes surrounding the customer_id (both escaped and unescaped)
@@ -260,7 +260,7 @@ async def list_accounts() -> str:
 
 @mcp.tool()
 async def execute_gaql_query(
-    customer_id: Union[str, int] = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     query: str = Field(description="Valid GAQL query string following Google Ads Query Language syntax")
 ) -> str:
     """
@@ -334,7 +334,7 @@ async def execute_gaql_query(
 
 @mcp.tool()
 async def get_campaign_performance(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     days: int = Field(default=30, description="Number of days to look back (7, 30, 90, etc.)")
 ) -> str:
     """
@@ -380,7 +380,7 @@ async def get_campaign_performance(
 
 @mcp.tool()
 async def get_ad_performance(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     days: int = Field(default=30, description="Number of days to look back (7, 30, 90, etc.)")
 ) -> str:
     """
@@ -427,7 +427,7 @@ async def get_ad_performance(
 
 @mcp.tool()
 async def run_gaql(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes)"),
     query: str = Field(description="Valid GAQL query string following Google Ads Query Language syntax"),
     format: str = Field(default="table", description="Output format: 'table', 'json', or 'csv'")
 ) -> str:
@@ -585,7 +585,7 @@ async def run_gaql(
 
 @mcp.tool()
 async def get_ad_creatives(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string")
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID.")
 ) -> str:
     """
     Get ad creative details including headlines, descriptions, and URLs.
@@ -683,7 +683,7 @@ async def get_ad_creatives(
 
 @mcp.tool()
 async def get_account_currency(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes)")
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes)")
 ) -> str:
     """
     Retrieve the default currency code used by the Google Ads account.
@@ -888,7 +888,7 @@ def gaql_help() -> str:
 
 @mcp.tool()
 async def get_image_assets(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     limit: int = Field(default=50, description="Maximum number of image assets to return")
 ) -> str:
     """
@@ -976,7 +976,7 @@ async def get_image_assets(
 
 @mcp.tool()
 async def download_image_asset(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     asset_id: str = Field(description="The ID of the image asset to download"),
     output_dir: str = Field(default="./ad_images", description="Directory to save the downloaded image")
 ) -> str:
@@ -1066,8 +1066,8 @@ async def download_image_asset(
 
 @mcp.tool()
 async def get_asset_usage(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
-    asset_id: str = Field(default=None, description="Optional: specific asset ID to look up (leave empty to get all image assets)"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
+    asset_id: str | None = Field(default=None, description="Optional: specific asset ID to look up (leave empty to get all image assets)"),
     asset_type: str = Field(default="IMAGE", description="Asset type to search for ('IMAGE', 'TEXT', 'VIDEO', etc.)")
 ) -> str:
     """
@@ -1237,7 +1237,7 @@ async def get_asset_usage(
 
 @mcp.tool()
 async def analyze_image_assets(
-    customer_id: str = Field(description="Google Ads customer ID (10 digits, no dashes) as a string"),
+    customer_id: str | int | None = Field(default=GOOGLE_ADS_LOGIN_CUSTOMER_ID, description="Google Ads customer ID (10 digits, no dashes). Defaults to login customer ID."),
     days: int = Field(default=30, description="Number of days to look back (7, 30, 90, etc.)")
 ) -> str:
     """
@@ -1274,7 +1274,7 @@ async def analyze_image_assets(
         # Default to 30 days if not a standard range
         date_range = "LAST_30_DAYS"
         
-    query = f"""
+    query = """
         SELECT
             asset.id,
             asset.name,
@@ -1418,9 +1418,9 @@ async def list_resources(customer_id: str) -> str:
     # Use your existing run_gaql function to execute this query
     return await run_gaql(customer_id, query)
 
-logger.debug("✅ Google Ads MCP Server started!")
-print("✅ Google Ads MCP Server started!")
+logger.debug("✅ Google Ads MCP Server v0.1.1 started!")
+print("✅ Google Ads MCP Server v0.1.1 started!")
 
 if __name__ == "__main__":
     # Start the MCP server on stdio transport
-    mcp.run(transport="stdio")
+    mcp.run()

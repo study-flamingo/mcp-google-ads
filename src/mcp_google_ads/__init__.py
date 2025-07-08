@@ -10,6 +10,8 @@ def main() -> None:
     except Exception as e:
         print(f"❌ Fatal error: {e}")
         logger.critical(f"❌ Fatal error: {e}")
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt received! Exiting...")
 
 
 __all__ = ["mcp"]
