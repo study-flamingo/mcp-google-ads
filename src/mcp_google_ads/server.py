@@ -17,7 +17,6 @@ from mcp.server.fastmcp import FastMCP
 
 # Local
 from .logs import logger
-logging.basicConfig(level=logging.DEBUG)
 
 mcp = FastMCP("google-ads-mcp")
 
@@ -36,7 +35,7 @@ GOOGLE_ADS_LOGIN_CUSTOMER_ID = os.environ.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID", ""
 GOOGLE_ADS_AUTH_TYPE = os.environ.get("GOOGLE_ADS_AUTH_TYPE", "oauth")  # oauth or service_account
 
 if not GOOGLE_ADS_DEVELOPER_TOKEN or not GOOGLE_ADS_AUTH_TYPE:
-    raise ValueError("⛔ One or more required environment variables are missing! Please check your .env variables.")
+    raise ValueError("⛔ One or more required environment variables are missing! Please check your environment variables.")
 
 def format_customer_id(customer_id: str | int | None) -> str:
     """Format customer ID to ensure it's 10 digits without dashes."""

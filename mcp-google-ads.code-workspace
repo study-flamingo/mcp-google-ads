@@ -1,11 +1,7 @@
 {
-	"folders": [
-		{
-			"path": "."
-		},
-		{
-			"path": "../../../../AppData/Roaming/Claude"
-		}
-	],
-    "settings": {}
+    "folders": [
+        {
+            "path": "."
+        }
+    ]
 }
